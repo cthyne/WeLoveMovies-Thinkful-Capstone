@@ -1,32 +1,49 @@
 const knex = require("../db/connection");
 
-function listCritics (criticId) { 
-    return knex('critics as c')
-      .where({'c.critic_id': criticId})
-      .first();
+function destroy(reviewId) {
+  return knex("reviews").where({ review_id: reviewId }).del();
 }
 
-function read (id) {
-    return knex("reviews")
-      .select("*")
-      .where("review_id", id)
-      .first();
+function read(reviewId) {
+  return knex("reviews").select("*").where({ review_id: reviewId }).first();
 }
 
-function update (updatedReview) {
-    return knex("reviews")
-      .select("*")
-      .where({ review_id: updatedReview.review_id })
-      .update(updatedReview, "*");
+function readMovieReviews(movieId) {
+  return knex("reviews")
+  .where({ movie_id: movieId })
+  .then((reviews) => Promise.all(reviews.map(setCritic)));
 }
 
-function destroy (id) {
-  return knex("reviews").where("review_id", id).del();
+function readCritic(criticId) {
+  return knex("critics").select("*").where({ critic_id: criticId }).first();
+}
+
+function getCritics(criticId) {
+  return knex("critics").select("*").where({ critic_id: criticId }).first();
+}
+
+function update(updatedReview) {
+  // console.log("servicesUpR:", updatedReview);
+  return knex("reviews")
+    .select("*")
+    .where({ review_id: updatedReview.review_id })
+    .update(updatedReview, "*")
+    .then((review) => {
+      // console.log(review[0]);
+      review[0];
+    });
+}
+//used to set critics for movie reviews.
+async function setCritic(review) {
+  review.critic = await readCritic(review.critic_id);
+  return review;
 }
 
 module.exports = {
-    read,
-    update,
-    listCritics,
-    destroy
-}
+  readMovieReviews,
+  delete: destroy,
+  read,
+  update,
+  getCritics,
+  readCritic
+};
