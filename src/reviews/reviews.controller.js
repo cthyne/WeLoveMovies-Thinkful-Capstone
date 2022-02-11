@@ -1,39 +1,35 @@
-const reviewsService = require("./reviews.service");
+const service = require("./reviews.services");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 
-async function ifReviewExists(req, res, next) {
-  const foundReview = await reviewsService.read(Number(req.params.reviewId));
-
-  if (foundReview) {
-    res.locals.review = foundReview;
-    return next();
+async function reviewExists (req, res, next) {
+    const review = await service.read(req.params.reviewId);
+    if (review) {
+      res.locals.review = review;
+      return next();
+    }
+    next({ status: 404, message: `Review cannot be found.` });
+  }
+  
+  async function update (req, res) {
+    const updatedReview = {
+      ...res.locals.review,
+      ...req.body.data,
+      review_id: res.locals.review.review_id,
+    };
+    
+    await service.update(updatedReview);
+    updatedReview.critic = await service.listCritics(updatedReview.critic_id)
+    res.json({ data: updatedReview});
+  }
+  
+  async function destroy (req, res) {
+    await service.destroy(
+      res.locals.review.review_id
+    );
+    res.sendStatus(204);
   }
 
-  return next({
-    status: 404,
-    message: `Review cannot be found for id: ${req.params.reviewId}`,
-  });
-}
-
-async function update(req, res, next) {
-  const newReview = {
-    ...res.locals.review,
-    ...req.body.data,
-  };
-
-  await reviewsService.update(newReview);
-  const updatedReview = await reviewsService.read(newReview.review_id);
-  updatedReview.critic = await reviewsService.getCriticById(newReview.critic_id);
-  res.json({ data: updatedReview });
-}
-
-async function destroy(req, res, next) {
-  const id = Number(req.params.reviewId);
-  await reviewsService.destroy(id);
-  res.sendStatus(204);
-}
-
-module.exports = {
-  update: [asyncErrorBoundary(ifReviewExists), asyncErrorBoundary(update)],
-  delete: [asyncErrorBoundary(ifReviewExists), asyncErrorBoundary(destroy)],
-};
+  module.exports = {
+    update: [asyncErrorBoundary(reviewExists), asyncErrorBoundary(update)],
+    delete: [asyncErrorBoundary(reviewExists), asyncErrorBoundary(destroy)]
+  }

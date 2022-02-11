@@ -1,12 +1,14 @@
+const services = require('./theaters.services');
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
-const theatersService = require("./theaters.service");
+const treeize = require("../utils/treeize");
 
 async function list(req, res, next) {
-  const data = await theatersService.list();
-  res.json({ data });
+    let theaters = await services.getAllTheaters();
+    theaters = treeize(theaters);
+    if (theaters instanceof Error) return next({ message: theaters.message });
+    res.json({ data: theaters });
 }
 
 module.exports = {
-    list: asyncErrorBoundary(list)
+  list: asyncErrorBoundary(list)
 }
-
