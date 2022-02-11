@@ -3,9 +3,8 @@ const controller = require("./reviews.controller");
 const methodNotAllowed = require("../errors/methodNotAllowed");
 
 router
-  .route("/:reviewId")
+.route("/:reviewId")
   .put(controller.update)
-  .delete(controller.delete)
-  .all(methodNotAllowed);
+  .delete(controller.delete);
 
-module.exports = router; 
+module.exports = router;
