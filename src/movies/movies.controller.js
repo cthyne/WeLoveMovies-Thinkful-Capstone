@@ -1,4 +1,4 @@
-const services = require("./movies.service");
+const services = require("./movies.services");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
 const treeize = require("../utils/treeize");
 
